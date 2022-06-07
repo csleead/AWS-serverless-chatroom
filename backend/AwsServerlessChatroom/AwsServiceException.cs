@@ -16,13 +16,21 @@ internal class AwsServiceException : Exception
         sb.AppendLine($"Response status: {serviceResponse.HttpStatusCode}");
         sb.AppendLine($"Request Id: '{serviceResponse.ResponseMetadata.RequestId}'");
 
-        sb.AppendLine($"Response metadata: '{serviceResponse.ResponseMetadata.RequestId}'");
+        sb.AppendLine("Response metadata:");
         foreach (var (key, value) in serviceResponse.ResponseMetadata.Metadata)
         {
             sb.Append($"'{key}': '{value}'");
         }
 
         return sb.ToString();
+    }
+
+    public static void ThrowIfFailed(AmazonWebServiceResponse serviceResponse, string? message = null)
+    {
+        if (!serviceResponse.IsSuccess())
+        {
+            throw new AwsServiceException(serviceResponse, message);
+        }
     }
 
     public AwsServiceException(AmazonWebServiceResponse serviceResponse, string? message) : base(FormatErrorMessage(serviceResponse, message))

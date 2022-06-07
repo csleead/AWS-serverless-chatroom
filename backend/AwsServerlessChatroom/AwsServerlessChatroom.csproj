@@ -16,5 +16,11 @@
     <PackageReference Include="Amazon.Lambda.Serialization.SystemTextJson" Version="2.3.0" />
     <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.0.168" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.43" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Extensions.DependencyInjection">
+      <HintPath>..\..\..\..\Nuget\.packages\microsoft.extensions.dependencyinjection\3.1.14\lib\netcoreapp3.1\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

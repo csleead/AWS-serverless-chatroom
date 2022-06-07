@@ -16,7 +16,7 @@ public class LocalDynamoDbFixture : IAsyncLifetime
     {
         _testcontainers = new TestcontainersBuilder<TestcontainersContainer>()
                  .WithImage("amazon/dynamodb-local:1.18.0")
-                 .WithName("dynamodb-local")
+                 .WithName($"dynamodb-local-{Guid.NewGuid()}")
                  .WithWorkingDirectory("/home/dynamodblocal")
                  .WithCommand("-jar DynamoDBLocal.jar -inMemory".Split(' '))
                  .WithPortBinding(8000, assignRandomHostPort: true)
