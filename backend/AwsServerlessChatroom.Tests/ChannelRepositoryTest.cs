@@ -2,6 +2,7 @@
 using Amazon.DynamoDBv2.Model;
 using FluentAssertions;
 using Xunit;
+using AwsServerlessChatroom.DataAccess;
 
 namespace AwsServerlessChatroom.Tests;
 public class ChannelRepositoryTest : IClassFixture<LocalDynamoDbFixture>, IAsyncLifetime

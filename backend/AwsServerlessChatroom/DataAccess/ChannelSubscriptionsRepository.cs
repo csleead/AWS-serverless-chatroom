@@ -1,7 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
 
-namespace AwsServerlessChatroom;
+namespace AwsServerlessChatroom.DataAccess;
 public class ChannelSubscriptionsRepository
 {
     private readonly AmazonDynamoDBClient _dynamoDbClient;

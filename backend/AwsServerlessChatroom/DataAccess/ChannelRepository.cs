@@ -5,8 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AwsServerlessChatroom.DataAccess;
+using AwsServerlessChatroom;
 
-namespace AwsServerlessChatroom;
+namespace AwsServerlessChatroom.DataAccess;
 public class ChannelRepository : IDisposable
 {
     private readonly AmazonDynamoDBClient _dynamoDbClient;
