@@ -8,4 +8,5 @@ namespace AwsServerlessChatroom;
 public static class DynamoDbTableNames
 {
     public static readonly string ChannelSubscriptions = "ServerlessChatroomApi-ChannelSubscriptions";
+    public static readonly string Channels = "ServerlessChatroomApi-Channels";
 }
