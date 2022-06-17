@@ -54,15 +54,19 @@ public class Function
             switch (message.RootElement.GetProperty("method").GetString())
             {
                 case "createChannel":
-                    await CreateChannel(request, message.RootElement.GetProperty("channelName").GetString()!);
+                    await CreateChannel(request, message);
                     break;
                 case "joinChannel":
-                    await JoinChannel(request, message.RootElement.GetProperty("channelId").GetString()!);
+                    await JoinChannel(request, message);
                     break;
                 default:
                     await request.PushData(new { error = "Unsupported method" });
                     break;
             }
+        }
+        catch (JsonException e)
+        {
+            await request.PushData(new { error = "The message isn't a valid JSON" });
         }
         catch (Exception e)
         {
@@ -76,9 +80,15 @@ public class Function
         };
     }
 
-    private async Task JoinChannel(APIGatewayProxyRequest request, string channelId)
+    private async Task JoinChannel(APIGatewayProxyRequest request, JsonDocument message)
     {
-        if (!Guid.TryParse(channelId, out var guid))
+        if (!message.RootElement.TryGetProperty("channelId", out var channelId))
+        {
+            await request.PushData(new { error = "The message doesn't contain a channelId" });
+            return;
+        }
+
+        if (!channelId.TryGetGuid(out var channelGuid))
         {
             await request.PushData(new { error = "channelId must be a GUID" });
             return;
@@ -86,7 +96,7 @@ public class Function
 
         using var scope = _serviceProvider.CreateScope();
         var useCase = scope.ServiceProvider.GetRequiredService<JoinChannel>();
-        var result = await useCase.Execute(request.RequestContext.ConnectionId, guid);
+        var result = await useCase.Execute(request.RequestContext.ConnectionId, channelGuid);
 
         switch (result)
         {
@@ -101,12 +111,25 @@ public class Function
         }
     }
 
-    private async Task CreateChannel(APIGatewayProxyRequest request, string channelName)
+    private async Task CreateChannel(APIGatewayProxyRequest request, JsonDocument message)
     {
+        if (!message.RootElement.TryGetProperty("channelName", out var channelName) || string.IsNullOrWhiteSpace(channelName.GetString()))
+        {
+            await request.PushData(new { error = "The message doesn't contain a channelName" });
+            return;
+        }
+
         using var scope = _serviceProvider.CreateScope();
         var useCase = scope.ServiceProvider.GetRequiredService<CreateChannel>();
-        var id = await useCase.Execute(channelName);
+        var id = await useCase.Execute(channelName.GetString()!);
 
-        await request.PushData(new { result = id.ToString(), message = "Channel created successfully" });
+        await request.PushData(new
+        {
+            message = "Channel created successfully",
+            result = new
+            {
+                channelId = id.ToString(),
+            },
+        });
     }
 }
