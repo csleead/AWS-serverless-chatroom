@@ -21,7 +21,7 @@ public class Function
     public Function()
     {
         var serviceCollection = new ServiceCollection();
-        _ = serviceCollection.AddSingleton<IAmazonDynamoDB, AmazonDynamoDBClient>();
+        _ = serviceCollection.AddSingleton<AmazonDynamoDBClient>();
         _ = serviceCollection.AddSingleton<ChannelRepository>();
         _ = serviceCollection.AddSingleton<ChannelSubscriptionsRepository>();
         _ = serviceCollection.AddSingleton<JoinChannel>();
