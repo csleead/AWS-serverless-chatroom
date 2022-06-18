@@ -9,6 +9,7 @@ using AwsServerlessChatroom.UseCases;
 using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
+using AwsServerlessChatroom.Utils;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 

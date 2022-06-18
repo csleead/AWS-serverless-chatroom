@@ -4,8 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AwsServerlessChatroom;
 
-namespace AwsServerlessChatroom;
+namespace AwsServerlessChatroom.Utils;
 internal static class ServiceResponseUtils
 {
     public static bool IsSuccess(this AmazonWebServiceResponse response) =>

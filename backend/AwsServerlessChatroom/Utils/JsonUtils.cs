@@ -5,8 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AwsServerlessChatroom;
 
-namespace AwsServerlessChatroom;
+namespace AwsServerlessChatroom.Utils;
 public static class JsonUtils
 {
     public static bool TryGetStringProperty(this JsonElement jsonElement, string propertyName, [NotNullWhen(true)] out string? value)

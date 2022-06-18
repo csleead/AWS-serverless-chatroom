@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AwsServerlessChatroom.Utils;
 
 namespace AwsServerlessChatroom.DataAccess;
 public record Message(string Content, string FromConnection, DateTimeOffset Time) : RecordWithValidation

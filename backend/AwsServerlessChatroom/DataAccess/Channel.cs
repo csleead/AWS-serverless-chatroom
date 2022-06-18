@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AwsServerlessChatroom;
+using AwsServerlessChatroom.Utils;
 
 namespace AwsServerlessChatroom.DataAccess;
 public record Channel(Guid Id, string Name) : RecordWithValidation
