@@ -12,6 +12,11 @@ using AwsServerlessChatroom.Utils;
 namespace AwsServerlessChatroom;
 public static class WebsocketPusher
 {
+    private static readonly JsonSerializerOptions JsonSerializerOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+    };
+
     public static async Task PushData(this APIGatewayProxyRequest request, object data)
     {
         using var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
@@ -20,7 +25,7 @@ public static class WebsocketPusher
         });
 
         using var ms = new MemoryStream();
-        JsonSerializer.Serialize(ms, data);
+        JsonSerializer.Serialize(ms, data, JsonSerializerOptions);
         ms.Position = 0;
 
         try

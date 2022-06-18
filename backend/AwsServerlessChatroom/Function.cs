@@ -140,6 +140,14 @@ public class Function
         return SuccessResponse;
     }
 
+    public async Task<APIGatewayProxyResponse> ListChannels(APIGatewayProxyRequest request)
+    {
+        var repo = _serviceProvider.GetRequiredService<ChannelRepository>();
+        var channels = await repo.ListChannels();
+        await request.PushData(channels);
+        return SuccessResponse;
+    }
+
     public async Task<APIGatewayProxyResponse> SendMessage(APIGatewayProxyRequest request)
     {
         var body = JsonDocument.Parse(request.Body);

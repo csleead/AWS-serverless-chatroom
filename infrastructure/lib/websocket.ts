@@ -18,6 +18,10 @@ export function createWebsocket(scope: Construct, lambdas: WebsocketLambdas) {
     integration: new WebSocketLambdaIntegration('CreateChannelIntegration', lambdas.createChannel),
   });
 
+  wsApi.addRoute('listChannels', {
+    integration: new WebSocketLambdaIntegration('ListChannelsIntegration', lambdas.listChannels),
+  });
+
   wsApi.addRoute('sendMessage', {
     integration: new WebSocketLambdaIntegration('SendMessageIntegration', lambdas.sendMessage),
   });
