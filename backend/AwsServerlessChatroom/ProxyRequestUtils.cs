@@ -13,4 +13,7 @@ internal static class ProxyRequestUtils
 
     public static string GetServiceUrl(this APIGatewayProxyRequest request) =>
         $"https://{request.RequestContext.DomainName}/{request.RequestContext.Stage}";
+
+    public static string GetConnectionId(this APIGatewayProxyRequest request) =>
+        request.RequestContext.ConnectionId;
 }

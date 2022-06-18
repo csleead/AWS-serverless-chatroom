@@ -18,6 +18,10 @@ export function createWebsocket(scope: Construct, lambdas: WebsocketLambdas) {
     integration: new WebSocketLambdaIntegration('CreateChannelIntegration', lambdas.createChannel),
   });
 
+  wsApi.addRoute('sendMessage', {
+    integration: new WebSocketLambdaIntegration('SendMessageIntegration', lambdas.sendMessage),
+  });
+
   new WebSocketStage(scope, 'WebSocketStage', {
     webSocketApi: wsApi,
     stageName: 'prod',

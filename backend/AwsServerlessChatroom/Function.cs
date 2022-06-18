@@ -29,8 +29,10 @@ public class Function
         _ = serviceCollection.AddSingleton<AmazonDynamoDBClient>();
         _ = serviceCollection.AddSingleton<ChannelRepository>();
         _ = serviceCollection.AddSingleton<ChannelSubscriptionsRepository>();
+        _ = serviceCollection.AddSingleton<MessagesRepository>();
         _ = serviceCollection.AddSingleton<JoinChannel>();
         _ = serviceCollection.AddSingleton<CreateChannel>();
+        _ = serviceCollection.AddSingleton<SendMessage>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider(validateScopes: true);
     }
@@ -133,6 +135,48 @@ public class Function
                 channelId = id.ToString(),
             },
         });
+
+        return SuccessResponse;
+    }
+
+    public async Task<APIGatewayProxyResponse> SendMessage(APIGatewayProxyRequest request)
+    {
+        var body = JsonDocument.Parse(request.Body);
+        if (!body.RootElement.TryGetProperty("channelId", out var channelIdELem) || !channelIdELem.TryGetGuid(out var channelId))
+        {
+            await request.PushData(new { error = "The message doesn't contain a channelId or channelId is not a valid GUID" });
+            return SuccessResponse;
+        }
+
+        if (!body.RootElement.TryGetStringProperty("message", out var message) || string.IsNullOrWhiteSpace(message))
+        {
+            await request.PushData(new { error = "The message doesn't contain a message field or the field is empty" });
+            return SuccessResponse;
+        }
+
+        using var scope = _serviceProvider.CreateScope();
+        var useCase = scope.ServiceProvider.GetRequiredService<SendMessage>();
+        var result = await useCase.Execute(
+            request.GetConnectionId(),
+            channelId,
+            message
+        );
+
+        switch (result)
+        {
+            case SendMessageResult.Success:
+                await request.PushData(new
+                {
+                    message = "Message sent",
+                });
+                break;
+            case SendMessageResult.ChannelNotFound:
+                await request.PushData(new
+                {
+                    error = "No such channel",
+                });
+                break;
+        }
 
         return SuccessResponse;
     }
