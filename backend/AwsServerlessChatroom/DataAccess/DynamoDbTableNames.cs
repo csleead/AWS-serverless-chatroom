@@ -10,4 +10,5 @@ public static class DynamoDbTableNames
 {
     public static readonly string ChannelSubscriptions = "ServerlessChatroomApi-ChannelSubscriptions";
     public static readonly string Channels = "ServerlessChatroomApi-Channels";
+    public static readonly string Messages = "ServerlessChatroomApi-Messages";
 }
