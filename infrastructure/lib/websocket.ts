@@ -10,6 +10,14 @@ export function createWebsocket(scope: Construct, lambdas: WebsocketLambdas) {
     defaultRouteOptions: { integration: new WebSocketLambdaIntegration('DefaultIntegration', lambdas.default) },
   });
 
+  wsApi.addRoute('joinChannel', {
+    integration: new WebSocketLambdaIntegration('JoinChannelIntegration', lambdas.joinChannel),
+  });
+
+  wsApi.addRoute('createChannel', {
+    integration: new WebSocketLambdaIntegration('CreateChannelIntegration', lambdas.createChannel),
+  });
+
   new WebSocketStage(scope, 'WebSocketStage', {
     webSocketApi: wsApi,
     stageName: 'prod',

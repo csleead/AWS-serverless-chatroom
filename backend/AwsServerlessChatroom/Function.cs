@@ -16,6 +16,11 @@ namespace AwsServerlessChatroom;
 
 public class Function
 {
+    private static readonly APIGatewayProxyResponse SuccessResponse = new()
+    {
+        StatusCode = 200,
+    };
+
     private readonly ServiceProvider _serviceProvider;
 
     public Function()
@@ -32,18 +37,12 @@ public class Function
 
     public async Task<APIGatewayProxyResponse> OnConnect()
     {
-        return new APIGatewayProxyResponse
-        {
-            StatusCode = 200
-        };
+        return SuccessResponse;
     }
 
     public async Task<APIGatewayProxyResponse> OnDisconnect()
     {
-        return new APIGatewayProxyResponse
-        {
-            StatusCode = 200
-        };
+        return SuccessResponse;
     }
 
     public async Task<APIGatewayProxyResponse> Default(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
@@ -51,18 +50,20 @@ public class Function
         try
         {
             var message = JsonDocument.Parse(request.Body);
-            switch (message.RootElement.GetProperty("method").GetString())
+            if (!message.RootElement.TryGetProperty("action", out var actionElem))
             {
-                case "createChannel":
-                    await CreateChannel(request, message);
-                    break;
-                case "joinChannel":
-                    await JoinChannel(request, message);
-                    break;
-                default:
-                    await request.PushData(new { error = "Unsupported method" });
-                    break;
+                await request.PushData(new { error = "The message isn't a valid JSON" });
+                return SuccessResponse;
             }
+
+            if (actionElem.ValueKind != JsonValueKind.String)
+            {
+                await request.PushData(new { error = "action must be a string" });
+                return SuccessResponse;
+            }
+
+            await request.PushData(new { error = "Unsupported action" });
+            return SuccessResponse;
         }
         catch (JsonException e)
         {
@@ -74,24 +75,22 @@ public class Function
             lambdaContext.Logger.LogError(e.ToString());
         }
 
-        return new APIGatewayProxyResponse
-        {
-            StatusCode = 200,
-        };
+        return SuccessResponse;
     }
 
-    private async Task JoinChannel(APIGatewayProxyRequest request, JsonDocument message)
+    public async Task<APIGatewayProxyResponse> JoinChannel(APIGatewayProxyRequest request)
     {
+        var message = JsonDocument.Parse(request.Body);
         if (!message.RootElement.TryGetProperty("channelId", out var channelId))
         {
             await request.PushData(new { error = "The message doesn't contain a channelId" });
-            return;
+            return SuccessResponse;
         }
 
         if (!channelId.TryGetGuid(out var channelGuid))
         {
             await request.PushData(new { error = "channelId must be a GUID" });
-            return;
+            return SuccessResponse;
         }
 
         using var scope = _serviceProvider.CreateScope();
@@ -109,14 +108,17 @@ public class Function
             default:
                 throw new Exception($"Unsupported JoinChannelResult: {result}");
         }
+
+        return SuccessResponse;
     }
 
-    private async Task CreateChannel(APIGatewayProxyRequest request, JsonDocument message)
+    public async Task<APIGatewayProxyResponse> CreateChannel(APIGatewayProxyRequest request)
     {
+        var message = JsonDocument.Parse(request.Body);
         if (!message.RootElement.TryGetProperty("channelName", out var channelName) || string.IsNullOrWhiteSpace(channelName.GetString()))
         {
             await request.PushData(new { error = "The message doesn't contain a channelName" });
-            return;
+            return SuccessResponse;
         }
 
         using var scope = _serviceProvider.CreateScope();
@@ -131,5 +133,7 @@ public class Function
                 channelId = id.ToString(),
             },
         });
+
+        return SuccessResponse;
     }
 }
