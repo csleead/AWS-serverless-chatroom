@@ -29,6 +29,10 @@ public class Function
     {
         var serviceCollection = new ServiceCollection();
         _ = serviceCollection.AddSingleton<AmazonDynamoDBClient>();
+        _ = serviceCollection.AddSingleton(new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
+        {
+            ServiceURL = WebSocketOptions.ServiceUrl
+        }));
         _ = serviceCollection.AddSingleton<ChannelRepository>();
         _ = serviceCollection.AddSingleton<ChannelSubscriptionsRepository>();
         _ = serviceCollection.AddSingleton<MessagesRepository>();
@@ -36,6 +40,7 @@ public class Function
         _ = serviceCollection.AddSingleton<CreateChannel>();
         _ = serviceCollection.AddSingleton<SendMessage>();
         _ = serviceCollection.AddSingleton<BroadcastNewMessages>();
+        _ = serviceCollection.AddSingleton<WebsocketPusher>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider(validateScopes: true);
     }
@@ -52,31 +57,32 @@ public class Function
 
     public async Task<APIGatewayProxyResponse> Default(APIGatewayProxyRequest request, ILambdaContext lambdaContext)
     {
+        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
         try
         {
             var message = JsonDocument.Parse(request.Body);
             if (!message.RootElement.TryGetProperty("action", out var actionElem))
             {
-                await request.PushData(new { error = "The message isn't a valid JSON" });
+                await pusher.PushData(request.GetConnectionId(), new { error = "The message isn't a valid JSON" });
                 return SuccessResponse;
             }
 
             if (actionElem.ValueKind != JsonValueKind.String)
             {
-                await request.PushData(new { error = "action must be a string" });
+                await pusher.PushData(request.GetConnectionId(), new { error = "action must be a string" });
                 return SuccessResponse;
             }
 
-            await request.PushData(new { error = "Unsupported action" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "Unsupported action" });
             return SuccessResponse;
         }
         catch (JsonException e)
         {
-            await request.PushData(new { error = "The message isn't a valid JSON" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "The message isn't a valid JSON" });
         }
         catch (Exception e)
         {
-            await request.PushData(new { error = "System Error" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "System Error" });
             lambdaContext.Logger.LogError(e.ToString());
         }
 
@@ -85,16 +91,17 @@ public class Function
 
     public async Task<APIGatewayProxyResponse> JoinChannel(APIGatewayProxyRequest request)
     {
+        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
         var message = JsonDocument.Parse(request.Body);
         if (!message.RootElement.TryGetProperty("channelId", out var channelId))
         {
-            await request.PushData(new { error = "The message doesn't contain a channelId" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "The message doesn't contain a channelId" });
             return SuccessResponse;
         }
 
         if (!channelId.TryGetGuid(out var channelGuid))
         {
-            await request.PushData(new { error = "channelId must be a GUID" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "channelId must be a GUID" });
             return SuccessResponse;
         }
 
@@ -105,10 +112,10 @@ public class Function
         switch (result)
         {
             case JoinChannelResult.Success:
-                await request.PushData(new { result = new { channelId } });
+                await pusher.PushData(request.GetConnectionId(), new { result = new { channelId } });
                 break;
             case JoinChannelResult.ChannelNotFound:
-                await request.PushData(new { error = "Channel not found" });
+                await pusher.PushData(request.GetConnectionId(), new { error = "Channel not found" });
                 break;
             default:
                 throw new Exception($"Unsupported JoinChannelResult: {result}");
@@ -119,10 +126,11 @@ public class Function
 
     public async Task<APIGatewayProxyResponse> CreateChannel(APIGatewayProxyRequest request)
     {
+        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
         var message = JsonDocument.Parse(request.Body);
         if (!message.RootElement.TryGetProperty("channelName", out var channelName) || string.IsNullOrWhiteSpace(channelName.GetString()))
         {
-            await request.PushData(new { error = "The message doesn't contain a channelName" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "The message doesn't contain a channelName" });
             return SuccessResponse;
         }
 
@@ -130,7 +138,7 @@ public class Function
         var useCase = scope.ServiceProvider.GetRequiredService<CreateChannel>();
         var id = await useCase.Execute(channelName.GetString()!);
 
-        await request.PushData(new
+        await pusher.PushData(request.GetConnectionId(), new
         {
             message = "Channel created successfully",
             result = new
@@ -144,24 +152,26 @@ public class Function
 
     public async Task<APIGatewayProxyResponse> ListChannels(APIGatewayProxyRequest request)
     {
+        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
         var repo = _serviceProvider.GetRequiredService<ChannelRepository>();
         var channels = await repo.ListChannels();
-        await request.PushData(channels);
+        await pusher.PushData(request.GetConnectionId(), channels);
         return SuccessResponse;
     }
 
     public async Task<APIGatewayProxyResponse> SendMessage(APIGatewayProxyRequest request)
     {
+        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
         var body = JsonDocument.Parse(request.Body);
         if (!body.RootElement.TryGetProperty("channelId", out var channelIdELem) || !channelIdELem.TryGetGuid(out var channelId))
         {
-            await request.PushData(new { error = "The message doesn't contain a channelId or channelId is not a valid GUID" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "The message doesn't contain a channelId or channelId is not a valid GUID" });
             return SuccessResponse;
         }
 
         if (!body.RootElement.TryGetStringProperty("message", out var message) || string.IsNullOrWhiteSpace(message))
         {
-            await request.PushData(new { error = "The message doesn't contain a message field or the field is empty" });
+            await pusher.PushData(request.GetConnectionId(), new { error = "The message doesn't contain a message field or the field is empty" });
             return SuccessResponse;
         }
 
@@ -176,13 +186,13 @@ public class Function
         switch (result)
         {
             case SendMessageResult.Success:
-                await request.PushData(new
+                await pusher.PushData(request.GetConnectionId(), new
                 {
                     message = "Message sent",
                 });
                 break;
             case SendMessageResult.ChannelNotFound:
-                await request.PushData(new
+                await pusher.PushData(request.GetConnectionId(), new
                 {
                     error = "No such channel",
                 });

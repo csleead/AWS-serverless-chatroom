@@ -10,33 +10,35 @@ using System.Threading.Tasks;
 using AwsServerlessChatroom.Utils;
 
 namespace AwsServerlessChatroom;
-public static class WebsocketPusher
+public class WebsocketPusher
 {
     private static readonly JsonSerializerOptions JsonSerializerOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
     };
 
-    public static async Task PushData(this APIGatewayProxyRequest request, object data)
-    {
-        using var apiClient = new AmazonApiGatewayManagementApiClient(new AmazonApiGatewayManagementApiConfig
-        {
-            ServiceURL = request.GetServiceUrl(),
-        });
+    private readonly AmazonApiGatewayManagementApiClient _apiClient;
 
+    public WebsocketPusher(AmazonApiGatewayManagementApiClient apiClient)
+    {
+        _apiClient = apiClient;
+    }
+
+    public async Task PushData(string connectionId, object data)
+    {
         using var ms = new MemoryStream();
         JsonSerializer.Serialize(ms, data, JsonSerializerOptions);
         ms.Position = 0;
 
         try
         {
-            var response = await apiClient.PostToConnectionAsync(new PostToConnectionRequest
+            var response = await _apiClient.PostToConnectionAsync(new PostToConnectionRequest
             {
-                ConnectionId = request.RequestContext.ConnectionId,
+                ConnectionId = connectionId,
                 Data = ms,
             });
 
-            AwsServiceException.ThrowIfFailed(response, $"Failed to send data to connection '{request.RequestContext.ConnectionId}'");
+            AwsServiceException.ThrowIfFailed(response, $"Failed to send data to connection '{connectionId}'");
         }
         catch (GoneException)
         {
