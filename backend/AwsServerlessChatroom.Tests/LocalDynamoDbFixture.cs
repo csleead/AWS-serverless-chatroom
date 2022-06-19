@@ -9,6 +9,7 @@ using Xunit;
 namespace AwsServerlessChatroom.Tests;
 public class LocalDynamoDbFixture : IAsyncLifetime
 {
+    private static readonly SemaphoreSlim Semaphore = new(1);
     private TestcontainersContainer? _testcontainers;
     private AmazonDynamoDBClient? _dynamoDbClient;
 
@@ -16,7 +17,11 @@ public class LocalDynamoDbFixture : IAsyncLifetime
 
     public async Task InitializeAsync()
     {
-        _testcontainers = new TestcontainersBuilder<TestcontainersContainer>()
+        // Serialize the containers startup to prevent overloading Docker which causes exceptions
+        try
+        {
+            await Semaphore.WaitAsync();
+            _testcontainers = new TestcontainersBuilder<TestcontainersContainer>()
                  .WithImage("amazon/dynamodb-local:1.18.0")
                  .WithName($"dynamodb-local-{Guid.NewGuid()}")
                  .WithWorkingDirectory("/home/dynamodblocal")
@@ -24,7 +29,12 @@ public class LocalDynamoDbFixture : IAsyncLifetime
                  .WithPortBinding(8000, assignRandomHostPort: true)
                  .WithWaitStrategy(Wait.ForUnixContainer().UntilPortIsAvailable(8000))
                  .Build();
-        await _testcontainers.StartAsync();
+            await _testcontainers.StartAsync();
+        }
+        finally
+        {
+            _ = Semaphore.Release();
+        }
 
         _dynamoDbClient = new AmazonDynamoDBClient(new AmazonDynamoDBConfig
         {
