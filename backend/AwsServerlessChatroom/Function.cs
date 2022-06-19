@@ -10,6 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System.Text;
 using System.Text.Json;
 using AwsServerlessChatroom.Utils;
+using Amazon.Lambda.DynamoDBEvents;
 
 [assembly: LambdaSerializer(typeof(Amazon.Lambda.Serialization.SystemTextJson.DefaultLambdaJsonSerializer))]
 
@@ -34,6 +35,7 @@ public class Function
         _ = serviceCollection.AddSingleton<JoinChannel>();
         _ = serviceCollection.AddSingleton<CreateChannel>();
         _ = serviceCollection.AddSingleton<SendMessage>();
+        _ = serviceCollection.AddSingleton<BroadcastNewMessages>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider(validateScopes: true);
     }
@@ -188,5 +190,24 @@ public class Function
         }
 
         return SuccessResponse;
+    }
+
+    public async Task OnNewMessages(DynamoDBEvent @event)
+    {
+        var messages = new List<Message>(@event.Records.Count);
+        foreach (var record in @event.Records)
+        {
+            var image = record.Dynamodb.NewImage;
+            var channelId = Guid.Parse(image["ChannelId"].S);
+            var timestamp = long.Parse(image["Timestamp"].N);
+            var fromConnectionId = image["FromConnection"].S;
+            var content = image["Content"].S;
+
+            var msg = new Message(channelId, content, fromConnectionId, DateTimeOffset.FromUnixTimeMilliseconds(timestamp));
+            messages.Add(msg);
+        }
+
+        var useCase = _serviceProvider.GetRequiredService<BroadcastNewMessages>();
+        await useCase.Execute(messages);
     }
 }

@@ -1,7 +1,8 @@
+import { backendCode } from './constants';
 import { DynamoTables } from './dynamo-tables';
 import { Effect, ManagedPolicy, PolicyStatement, Role, ServicePrincipal } from "aws-cdk-lib/aws-iam";
 import { Construct } from "constructs";
-import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
+import { Function, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { Duration, RemovalPolicy } from "aws-cdk-lib";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 
@@ -80,7 +81,7 @@ function createFunction(scope: Construct, id: string, handler: string, role: Rol
   const func = new Function(scope, id, {
     role,
     runtime: Runtime.DOTNET_6,
-    code: Code.fromAsset('../artifacts/AwsServerlessChatroomBackend.zip'),
+    code: backendCode,
     timeout: Duration.seconds(10),
     handler,
   });

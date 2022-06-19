@@ -1,5 +1,5 @@
 import { RemovalPolicy } from "aws-cdk-lib";
-import { AttributeType, Table } from "aws-cdk-lib/aws-dynamodb";
+import { AttributeType, StreamViewType, Table } from "aws-cdk-lib/aws-dynamodb";
 import { Construct } from "constructs";
 
 export interface DynamoTables {
@@ -35,6 +35,7 @@ export function createDynamoTables(scope: Construct): DynamoTables {
     partitionKey: { name: 'ChannelId', type: AttributeType.STRING },
     sortKey: { name: 'Timestamp', type: AttributeType.NUMBER },
     removalPolicy: RemovalPolicy.DESTROY,
+    stream: StreamViewType.NEW_IMAGE,
   });
 
   return {

@@ -51,6 +51,7 @@ public class MessagesRepository
         foreach (var item in response.Items)
         {
             result.Add(new Message(
+                Guid.Parse(item["ChannelId"].S),
                 item["Content"].S,
                 item["FromConnection"].S,
                 DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(item["Timestamp"].N))
