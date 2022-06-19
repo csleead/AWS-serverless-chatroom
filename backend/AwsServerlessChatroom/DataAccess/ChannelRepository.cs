@@ -39,15 +39,36 @@ public class ChannelRepository : IDisposable
     public async Task<Guid> CreateChannel(string channelName)
     {
         var channelId = Guid.NewGuid();
-        var response = await _dynamoDbClient.PutItemAsync(new PutItemRequest
+
+        var tran = new TransactWriteItemsRequest();
+
+        tran.TransactItems.Add(new TransactWriteItem
         {
-            TableName = DynamoDbTableNames.Channels,
-            Item = new Dictionary<string, AttributeValue>
+            Put = new Put
             {
-                { "ChannelId", new AttributeValue(channelId.ToString()) },
-                { "Name", new AttributeValue(channelName) },
+                TableName = DynamoDbTableNames.Channels,
+                Item = new Dictionary<string, AttributeValue>
+                {
+                    { "ChannelId", new AttributeValue(channelId.ToString()) },
+                    { "Name", new AttributeValue(channelName) },
+                }
             }
         });
+
+        tran.TransactItems.Add(new TransactWriteItem
+        {
+            Put = new Put
+            {
+                TableName = DynamoDbTableNames.MessageSequence,
+                Item = new Dictionary<string, AttributeValue>
+                {
+                    { "ChannelId", new AttributeValue(channelId.ToString()) },
+                    { "MsgSeq", new AttributeValue { N = "-1" } },
+                }
+            }
+        });
+
+        var response = await _dynamoDbClient.TransactWriteItemsAsync(tran);
 
         AwsServiceException.ThrowIfFailed(response);
 

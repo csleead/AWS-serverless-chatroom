@@ -209,11 +209,12 @@ public class Function
         {
             var image = record.Dynamodb.NewImage;
             var channelId = Guid.Parse(image["ChannelId"].S);
+            var sequence = long.Parse(image["Sequence"].N);
             var timestamp = long.Parse(image["Timestamp"].N);
             var fromConnectionId = image["FromConnection"].S;
             var content = image["Content"].S;
 
-            var msg = new Message(channelId, content, fromConnectionId, DateTimeOffset.FromUnixTimeMilliseconds(timestamp));
+            var msg = new Message(channelId, sequence, content, fromConnectionId, DateTimeOffset.FromUnixTimeMilliseconds(timestamp));
             messages.Add(msg);
         }
 

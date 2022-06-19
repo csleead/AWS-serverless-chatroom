@@ -7,6 +7,7 @@ export interface DynamoTables {
   channelSubscriptionsTable: Table;
   messagesTable: Table;
   channelTable: Table;
+  messageSequenceTable: Table;
 }
 
 export function createDynamoTables(scope: Construct): DynamoTables {
@@ -33,9 +34,15 @@ export function createDynamoTables(scope: Construct): DynamoTables {
   const messagesTable = new Table(scope, 'MessagesTable', {
     tableName: 'ServerlessChatroomApi-Messages',
     partitionKey: { name: 'ChannelId', type: AttributeType.STRING },
-    sortKey: { name: 'Timestamp', type: AttributeType.NUMBER },
+    sortKey: { name: 'MsgSeq', type: AttributeType.NUMBER },
     removalPolicy: RemovalPolicy.DESTROY,
     stream: StreamViewType.NEW_IMAGE,
+  });
+
+  const messageSequenceTable = new Table(scope, 'MessageSequenceTable', {
+    tableName: 'ServerlessChatroomApi-MessageSequence',
+    partitionKey: { name: 'ChannelId', type: AttributeType.STRING },
+    removalPolicy: RemovalPolicy.DESTROY,
   });
 
   return {
@@ -43,5 +50,6 @@ export function createDynamoTables(scope: Construct): DynamoTables {
     channelSubscriptionsTable,
     messagesTable,
     channelTable,
+    messageSequenceTable,
   };
 }

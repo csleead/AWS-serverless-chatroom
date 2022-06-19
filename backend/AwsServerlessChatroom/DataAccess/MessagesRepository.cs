@@ -1,5 +1,7 @@
 ﻿using Amazon.DynamoDBv2;
 using Amazon.DynamoDBv2.Model;
+using Polly;
+using Polly.Retry;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,7 +11,14 @@ using System.Threading.Tasks;
 namespace AwsServerlessChatroom.DataAccess;
 public class MessagesRepository
 {
+    private static readonly Random Random = new();
+
+    private static readonly AsyncRetryPolicy RetryPolicy = Policy
+        .Handle<TransactionCanceledException>(e => e.CancellationReasons.Any(r => r.Code == "ConditionalCheckFailed"))
+        .WaitAndRetryForeverAsync(_ => TimeSpan.FromMilliseconds(Random.NextInt64(1000)));
+
     private readonly AmazonDynamoDBClient _dbClient;
+
 
     public MessagesRepository(AmazonDynamoDBClient dbClient)
     {
@@ -18,17 +27,71 @@ public class MessagesRepository
 
     public async Task InsertMessage(string fromConnection, Guid channelId, string content)
     {
-        var response = await _dbClient.PutItemAsync(new PutItemRequest
+        await RetryPolicy.ExecuteAsync(async () =>
         {
-            TableName = DynamoDbTableNames.Messages,
-            Item = new Dictionary<string, AttributeValue>
+            var sequence = await NextMessageSequence(channelId);
+            await PutMessage(fromConnection, channelId, content, sequence);
+        });
+    }
+
+    private async Task<long> NextMessageSequence(Guid channelId)
+    {
+        var response = await _dbClient.QueryAsync(new QueryRequest
+        {
+            TableName = DynamoDbTableNames.MessageSequence,
+            KeyConditionExpression = "ChannelId = :channelId",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
             {
-                { "ChannelId", new AttributeValue(channelId.ToString()) },
-                { "Timestamp", new AttributeValue { N = $"{DateTimeOffset.Now.ToUnixTimeMilliseconds()}" } },
-                { "FromConnection", new AttributeValue(fromConnection) },
-                { "Content", new AttributeValue(content) },
+                { ":channelId", new AttributeValue(channelId.ToString()) },
+            },
+            ProjectionExpression = "MsgSeq"
+        });
+
+        AwsServiceException.ThrowIfFailed(response);
+
+        return long.Parse(response.Items.Single()["MsgSeq"].N) + 1;
+    }
+
+    private async Task PutMessage(string fromConnection, Guid channelId, string content, long sequence)
+    {
+        var tran = new TransactWriteItemsRequest();
+        tran.TransactItems.Add(new TransactWriteItem
+        {
+            Put = new Put
+            {
+                TableName = DynamoDbTableNames.Messages,
+                Item = new Dictionary<string, AttributeValue>
+                {
+                    { "ChannelId", new AttributeValue(channelId.ToString()) },
+                    { "MsgSeq", new AttributeValue { N = $"{sequence}" } },
+                    { "Timestamp", new AttributeValue { N = $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}" } },
+                    { "FromConnection", new AttributeValue(fromConnection) },
+                    { "Content", new AttributeValue(content) },
+                }
             }
         });
+
+        tran.TransactItems.Add(new TransactWriteItem
+        {
+            Put = new Put
+            {
+                TableName = DynamoDbTableNames.MessageSequence,
+                Item = new Dictionary<string, AttributeValue>
+                {
+                    { "ChannelId", new AttributeValue(channelId.ToString()) },
+                    { "MsgSeq", new AttributeValue { N = $"{sequence}" } },
+                    { "FromConnection", new AttributeValue(fromConnection) },
+                    { "Content", new AttributeValue(content) },
+                },
+                ConditionExpression = "MsgSeq = :sequence",
+                ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+                {
+                    { ":sequence", new AttributeValue { N = $"{sequence - 1}" } }
+                }
+            },
+        });
+
+        var response = await _dbClient.TransactWriteItemsAsync(tran);
 
         AwsServiceException.ThrowIfFailed(response);
     }
@@ -52,6 +115,7 @@ public class MessagesRepository
         {
             result.Add(new Message(
                 Guid.Parse(item["ChannelId"].S),
+                long.Parse(item["MsgSeq"].N),
                 item["Content"].S,
                 item["FromConnection"].S,
                 DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(item["Timestamp"].N))

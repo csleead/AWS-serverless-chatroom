@@ -70,6 +70,7 @@ function createRole(scope: Construct, tables: DynamoTables) {
         tables.channelSubscriptionsTable.tableArn,
         tables.messagesTable.tableArn,
         tables.channelTable.tableArn,
+        tables.messageSequenceTable.tableArn,
       ],
     })
   );

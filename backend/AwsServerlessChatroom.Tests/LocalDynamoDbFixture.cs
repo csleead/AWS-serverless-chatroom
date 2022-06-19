@@ -76,12 +76,26 @@ public class LocalDynamoDbFixture : IAsyncLifetime
             KeySchema = new List<KeySchemaElement>
             {
                 new KeySchemaElement("ChannelId", KeyType.HASH),
-                new KeySchemaElement("Timestamp", KeyType.RANGE),
+                new KeySchemaElement("MsgSeq", KeyType.RANGE),
             },
             AttributeDefinitions = new List<AttributeDefinition>
             {
                 new AttributeDefinition("ChannelId", ScalarAttributeType.S),
-                new AttributeDefinition("Timestamp", ScalarAttributeType.N),
+                new AttributeDefinition("MsgSeq", ScalarAttributeType.N),
+            },
+            ProvisionedThroughput = new ProvisionedThroughput(5, 5),
+        });
+
+        _ = await DynamoDbClient.CreateTableAsync(new CreateTableRequest
+        {
+            TableName = DynamoDbTableNames.MessageSequence,
+            KeySchema = new List<KeySchemaElement>
+            {
+                new KeySchemaElement("ChannelId", KeyType.HASH),
+            },
+            AttributeDefinitions = new List<AttributeDefinition>
+            {
+                new AttributeDefinition("ChannelId", ScalarAttributeType.S),
             },
             ProvisionedThroughput = new ProvisionedThroughput(5, 5),
         });
@@ -94,6 +108,7 @@ public class LocalDynamoDbFixture : IAsyncLifetime
             DynamoDbTableNames.Channels,
             DynamoDbTableNames.ChannelSubscriptions,
             DynamoDbTableNames.Messages,
+            DynamoDbTableNames.MessageSequence,
         };
 
         foreach (var t in tables)

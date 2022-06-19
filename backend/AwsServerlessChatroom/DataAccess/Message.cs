@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using AwsServerlessChatroom.Utils;
 
 namespace AwsServerlessChatroom.DataAccess;
-public record Message(Guid ChannelId, string Content, string FromConnection, DateTimeOffset Time) : RecordWithValidation
+public record Message(Guid ChannelId, long Sequence, string Content, string FromConnection, DateTimeOffset Time) : RecordWithValidation
 {
     protected override void Validate()
     {
