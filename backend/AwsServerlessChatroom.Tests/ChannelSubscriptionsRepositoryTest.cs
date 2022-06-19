@@ -17,40 +17,23 @@ namespace AwsServerlessChatroom.Tests;
 [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0058:Expression value is never used", Justification = "False alarm for fluent assertions")]
 public class ChannelSubscriptionsRepositoryTest : IClassFixture<LocalDynamoDbFixture>, IAsyncLifetime
 {
-    private readonly AmazonDynamoDBClient _dynamoDbClient;
+    private readonly LocalDynamoDbFixture _localDynamoDbFixture;
     private readonly ChannelSubscriptionsRepository _respository;
 
     public ChannelSubscriptionsRepositoryTest(LocalDynamoDbFixture localDynamoDbFixture)
     {
-        _dynamoDbClient = localDynamoDbFixture.DynamoDbClient;
-        _respository = new ChannelSubscriptionsRepository(_dynamoDbClient);
+        _localDynamoDbFixture = localDynamoDbFixture;
+        _respository = new ChannelSubscriptionsRepository(localDynamoDbFixture.DynamoDbClient);
     }
 
     public async Task InitializeAsync()
     {
-        _ = await _dynamoDbClient.CreateTableAsync(new CreateTableRequest
-        {
-            TableName = DynamoDbTableNames.ChannelSubscriptions,
-            KeySchema = new List<KeySchemaElement>
-            {
-                new KeySchemaElement("ChannelId", KeyType.HASH),
-                new KeySchemaElement("ConnectionId", KeyType.RANGE),
-            },
-            AttributeDefinitions = new List<AttributeDefinition>
-            {
-                new AttributeDefinition("ChannelId", ScalarAttributeType.S),
-                new AttributeDefinition("ConnectionId", ScalarAttributeType.S),
-            },
-            ProvisionedThroughput = new ProvisionedThroughput(5, 5),
-        });
+        await _localDynamoDbFixture.CreateTables();
     }
 
     public async Task DisposeAsync()
     {
-        _ = await _dynamoDbClient.DeleteTableAsync(new DeleteTableRequest
-        {
-            TableName = DynamoDbTableNames.ChannelSubscriptions,
-        });
+        await _localDynamoDbFixture.DeleteTables();
     }
 
     [Fact]

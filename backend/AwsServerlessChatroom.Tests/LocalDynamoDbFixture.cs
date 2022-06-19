@@ -1,4 +1,6 @@
 ﻿using Amazon.DynamoDBv2;
+using Amazon.DynamoDBv2.Model;
+using AwsServerlessChatroom.DataAccess;
 using DotNet.Testcontainers.Containers.Builders;
 using DotNet.Testcontainers.Containers.Modules;
 using DotNet.Testcontainers.Containers.WaitStrategies;
@@ -34,5 +36,73 @@ public class LocalDynamoDbFixture : IAsyncLifetime
     {
         _dynamoDbClient?.Dispose();
         await (_testcontainers?.StopAsync() ?? Task.CompletedTask);
+    }
+
+    public async Task CreateTables()
+    {
+        _ = await DynamoDbClient.CreateTableAsync(new CreateTableRequest
+        {
+            TableName = DynamoDbTableNames.Channels,
+            KeySchema = new List<KeySchemaElement>
+            {
+                new KeySchemaElement("ChannelId", KeyType.HASH),
+            },
+            AttributeDefinitions = new List<AttributeDefinition>
+            {
+                new AttributeDefinition("ChannelId", ScalarAttributeType.S),
+            },
+            ProvisionedThroughput = new ProvisionedThroughput(5, 5),
+        });
+
+        _ = await DynamoDbClient.CreateTableAsync(new CreateTableRequest
+        {
+            TableName = DynamoDbTableNames.ChannelSubscriptions,
+            KeySchema = new List<KeySchemaElement>
+            {
+                new KeySchemaElement("ChannelId", KeyType.HASH),
+                new KeySchemaElement("ConnectionId", KeyType.RANGE),
+            },
+            AttributeDefinitions = new List<AttributeDefinition>
+            {
+                new AttributeDefinition("ChannelId", ScalarAttributeType.S),
+                new AttributeDefinition("ConnectionId", ScalarAttributeType.S),
+            },
+            ProvisionedThroughput = new ProvisionedThroughput(5, 5),
+        });
+
+        _ = await DynamoDbClient.CreateTableAsync(new CreateTableRequest
+        {
+            TableName = DynamoDbTableNames.Messages,
+            KeySchema = new List<KeySchemaElement>
+            {
+                new KeySchemaElement("ChannelId", KeyType.HASH),
+                new KeySchemaElement("Timestamp", KeyType.RANGE),
+            },
+            AttributeDefinitions = new List<AttributeDefinition>
+            {
+                new AttributeDefinition("ChannelId", ScalarAttributeType.S),
+                new AttributeDefinition("Timestamp", ScalarAttributeType.N),
+            },
+            ProvisionedThroughput = new ProvisionedThroughput(5, 5),
+        });
+    }
+
+    public async Task DeleteTables()
+    {
+        var tables = new[]
+        {
+            DynamoDbTableNames.Channels,
+            DynamoDbTableNames.ChannelSubscriptions,
+            DynamoDbTableNames.Messages,
+        };
+
+        foreach (var t in tables)
+        {
+            _ = await DynamoDbClient.DeleteTableAsync(new DeleteTableRequest
+            {
+                TableName = t,
+            });
+
+        }
     }
 }
