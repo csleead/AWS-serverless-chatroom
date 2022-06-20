@@ -24,6 +24,10 @@ export function createWebsocket(scope: Construct, lambdas: WebsocketLambdas): We
     integration: new WebSocketLambdaIntegration('JoinChannelIntegration', lambdas.joinChannel),
   });
 
+  wsApi.addRoute('leaveChannel', {
+    integration: new WebSocketLambdaIntegration('LeaveChannelIntegration', lambdas.leaveChannel),
+  });
+
   wsApi.addRoute('createChannel', {
     integration: new WebSocketLambdaIntegration('CreateChannelIntegration', lambdas.createChannel),
   });

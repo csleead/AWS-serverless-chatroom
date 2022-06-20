@@ -42,6 +42,7 @@ public class Function
         _ = serviceCollection.AddSingleton<BroadcastNewMessages>();
         _ = serviceCollection.AddSingleton<WebsocketPusher>();
         _ = serviceCollection.AddSingleton<DisconnectionCleanup>();
+        _ = serviceCollection.AddSingleton<LeaveChannel>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider(validateScopes: true);
     }
@@ -134,6 +135,23 @@ public class Function
             default:
                 throw new Exception($"Unsupported JoinChannelResult: {result}");
         }
+
+        return SuccessResponse;
+    }
+
+    public async Task<APIGatewayProxyResponse> LeaveChannel(APIGatewayProxyRequest request)
+    {
+        var wsPusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
+        var body = JsonDocument.Parse(request.Body);
+        if (!body.RootElement.TryGetProperty("channelId", out var channelIdELem) || !channelIdELem.TryGetGuid(out var channelId))
+        {
+            await wsPusher.PushData(request.GetConnectionId(), new { error = "The message doesn't contain a channelId or channelId is not a valid GUID" });
+            return SuccessResponse;
+        }
+
+        var leaveChannel = _serviceProvider.GetRequiredService<LeaveChannel>();
+        await leaveChannel.Execute(request.GetConnectionId(), channelId);
+        await wsPusher.PushData(request.GetConnectionId(), new { message = "Leave channel successfully" });
 
         return SuccessResponse;
     }

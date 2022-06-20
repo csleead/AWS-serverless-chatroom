@@ -21,6 +21,7 @@ export class InfrastructureStack extends Stack {
       wsLambdas.default,
       wsLambdas.createChannel,
       wsLambdas.joinChannel,
+      wsLambdas.leaveChannel,
       wsLambdas.listChannels,
       wsLambdas.sendMessage,
       wsLambdas.getConnectionInfo,
