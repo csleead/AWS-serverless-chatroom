@@ -93,4 +93,19 @@ public class ChannelSubscriptionsRepositoryTest : IClassFixture<LocalDynamoDbFix
 
         await _respository.RemoveChannelSubscription(channelId, connectionId);
     }
+
+    [Fact]
+    public async Task CanRecieveSubscriptionsOfConnectionCorrectly()
+    {
+
+        var connectionId = Guid.NewGuid().ToString();
+        var channelId1 = Guid.NewGuid();
+        var channelId2 = Guid.NewGuid();
+
+        await _respository.AddChannelSubscription(channelId1, connectionId);
+        await _respository.AddChannelSubscription(channelId2, connectionId);
+
+        var result = await _respository.ListChannelSubscriptionsOfConnection(connectionId);
+        _ = result.Should().BeEquivalentTo(new[] { channelId1, channelId2 });
+    }
 }

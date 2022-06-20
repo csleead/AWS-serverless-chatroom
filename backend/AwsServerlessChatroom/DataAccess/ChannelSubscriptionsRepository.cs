@@ -64,4 +64,35 @@ public class ChannelSubscriptionsRepository
 
         AwsServiceException.ThrowIfFailed(response);
     }
+
+    public async Task<ISet<Guid>> ListChannelSubscriptionsOfConnection(string connectionId)
+    {
+        var response = await _dynamoDbClient.ScanAsync(new ScanRequest
+        {
+            TableName = DynamoDbTableNames.ChannelSubscriptions,
+            ScanFilter = new Dictionary<string, Condition>
+            {
+                {
+                    "ConnectionId", new Condition()
+                    {
+                        ComparisonOperator = ComparisonOperator.EQ,
+                        AttributeValueList = new List<AttributeValue>
+                        {
+                             new AttributeValue(connectionId),
+                        },
+                    }
+                }
+            },
+        });
+
+        AwsServiceException.ThrowIfFailed(response);
+
+        var set = new HashSet<Guid>(response.Count);
+        foreach (var channelId in response.Items.Select(x => x["ChannelId"].S))
+        {
+            _ = set.Add(Guid.Parse(channelId));
+        }
+
+        return set;
+    }
 }
