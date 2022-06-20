@@ -15,6 +15,7 @@ export interface WebsocketLambdas {
   leaveChannel: Function;
   listChannels: Function;
   sendMessage: Function;
+  fetchMessages: Function;
   getConnectionInfo: Function;
 }
 
@@ -29,6 +30,7 @@ export function createWebsocketLambdas(scope: Construct, tables: DynamoTables): 
   const leaveChannel = createFunction(scope,'LeaveChannelFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::LeaveChannel', role);
   const listChannels = createFunction(scope,'ListChannelsFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::ListChannels', role);
   const sendMessage = createFunction(scope,'SendMessageFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::SendMessage', role);
+  const fetchMessages = createFunction(scope,'FetchMessagesFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::FetchMessages', role);
 
   return {
     connect,
@@ -40,6 +42,7 @@ export function createWebsocketLambdas(scope: Construct, tables: DynamoTables): 
     leaveChannel,
     listChannels,
     sendMessage,
+    fetchMessages,
   };
 }
 

@@ -40,6 +40,10 @@ export function createWebsocket(scope: Construct, lambdas: WebsocketLambdas): We
     integration: new WebSocketLambdaIntegration('SendMessageIntegration', lambdas.sendMessage),
   });
 
+  wsApi.addRoute('fetchMessages', {
+    integration: new WebSocketLambdaIntegration('FetchMessagesIntegration', lambdas.fetchMessages),
+  });
+
   const stage = new WebSocketStage(scope, 'WebSocketStage', {
     webSocketApi: wsApi,
     stageName: 'prod',

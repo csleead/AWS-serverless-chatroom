@@ -73,4 +73,23 @@ public class MessagesRepositoryTest : IClassFixture<LocalDynamoDbFixture>, IAsyn
         _ = messages.Select(m => m.Sequence).Should().BeEquivalentTo(Enumerable.Range(0, 10));
 
     }
+
+    [Fact]
+    public async Task GetFetchMessagesCorrectly()
+    {
+        var channel = await _channelRespository.CreateChannel("CH1");
+        for (var i = 0; i < 10; i++)
+        {
+            await _respository.InsertMessage($"connection-{i}", channel, $"message-{i}");
+        }
+
+        var messages = await _respository.FetchMessages(channel, 10, null);
+        _ = messages.Select(m => m.Content).Should().BeEquivalentTo(Enumerable.Range(0, 10).Select(i => $"message-{i}"), options => options.WithStrictOrdering());
+
+        messages = await _respository.FetchMessages(channel, 2, 9);
+        _ = messages.Select(m => m.Content).Should().BeEquivalentTo(new[] { "message-8", "message-9" }, options => options.WithStrictOrdering());
+
+        messages = await _respository.FetchMessages(channel, 10, 0);
+        _ = messages.Select(m => m.Content).Should().BeEquivalentTo(new[] { "message-0" });
+    }
 }

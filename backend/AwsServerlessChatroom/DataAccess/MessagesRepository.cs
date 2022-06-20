@@ -25,6 +25,38 @@ public class MessagesRepository
         _dbClient = dbClient;
     }
 
+    public async Task<IReadOnlyList<Message>> FetchMessages(Guid channelId, int takeLast, long? maxSequence)
+    {
+        maxSequence ??= await NextMessageSequence(channelId) - 1;
+
+        var response = await _dbClient.QueryAsync(new QueryRequest
+        {
+            TableName = DynamoDbTableNames.Messages,
+            KeyConditionExpression = "ChannelId = :channelId AND MsgSeq BETWEEN :minSequence AND :maxSequence",
+            ExpressionAttributeValues = new Dictionary<string, AttributeValue>
+            {
+                { ":channelId", new AttributeValue(channelId.ToString()) },
+                { ":minSequence", new AttributeValue() { N = $"{maxSequence - takeLast + 1}" } },
+                { ":maxSequence", new AttributeValue()  { N = $"{maxSequence}" } },
+            }
+        });
+
+        AwsServiceException.ThrowIfFailed(response);
+
+        var messages = new List<Message>(response.Count);
+        foreach (var item in response.Items)
+        {
+            messages.Add(new Message(
+                Guid.Parse(item["ChannelId"].S),
+                long.Parse(item["MsgSeq"].N),
+                item["Content"].S,
+                item["FromConnection"].S,
+                DateTimeOffset.FromUnixTimeMilliseconds(long.Parse(item["Timestamp"].N)))
+            );
+        }
+        return messages;
+    }
+
     public async Task InsertMessage(string fromConnection, Guid channelId, string content)
     {
         await RetryPolicy.ExecuteAsync(async () =>
