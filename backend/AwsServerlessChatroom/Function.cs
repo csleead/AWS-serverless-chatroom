@@ -41,6 +41,7 @@ public class Function
         _ = serviceCollection.AddSingleton<SendMessage>();
         _ = serviceCollection.AddSingleton<BroadcastNewMessages>();
         _ = serviceCollection.AddSingleton<WebsocketPusher>();
+        _ = serviceCollection.AddSingleton<DisconnectionCleanup>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider(validateScopes: true);
     }
@@ -50,8 +51,10 @@ public class Function
         return SuccessResponse;
     }
 
-    public async Task<APIGatewayProxyResponse> OnDisconnect()
+    public async Task<APIGatewayProxyResponse> OnDisconnect(APIGatewayProxyRequest request)
     {
+        var cleanup = _serviceProvider.GetRequiredService<DisconnectionCleanup>();
+        await cleanup.Execute(request.GetConnectionId());
         return SuccessResponse;
     }
 

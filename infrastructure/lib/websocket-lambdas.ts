@@ -64,6 +64,7 @@ function createRole(scope: Construct, tables: DynamoTables) {
         "dynamodb:UpdateItem",
         "dynamodb:Query",
         "dynamodb:Scan",
+        "dynamodb:DeleteItem"
       ],
       resources: [
         tables.joinedChannelTable.tableArn,
