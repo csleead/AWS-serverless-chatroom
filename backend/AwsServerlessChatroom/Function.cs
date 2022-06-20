@@ -92,6 +92,17 @@ public class Function
         return SuccessResponse;
     }
 
+    public async Task<APIGatewayProxyResponse> GetConnectionInfo(APIGatewayProxyRequest request)
+    {
+        var wsPusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
+        await wsPusher.PushData(request.GetConnectionId(), new
+        {
+            ConnectionId = request.GetConnectionId(),
+        });
+
+        return SuccessResponse;
+    }
+
     public async Task<APIGatewayProxyResponse> JoinChannel(APIGatewayProxyRequest request)
     {
         var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();

@@ -16,6 +16,10 @@ export function createWebsocket(scope: Construct, lambdas: WebsocketLambdas): We
     defaultRouteOptions: { integration: new WebSocketLambdaIntegration('DefaultIntegration', lambdas.default) },
   });
 
+  wsApi.addRoute('getConnectionInfo', {
+    integration: new WebSocketLambdaIntegration('GetConnectionInfoIntegration', lambdas.getConnectionInfo),
+  });
+
   wsApi.addRoute('joinChannel', {
     integration: new WebSocketLambdaIntegration('JoinChannelIntegration', lambdas.joinChannel),
   });

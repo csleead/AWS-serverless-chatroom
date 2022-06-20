@@ -23,6 +23,7 @@ export class InfrastructureStack extends Stack {
       wsLambdas.joinChannel,
       wsLambdas.listChannels,
       wsLambdas.sendMessage,
+      wsLambdas.getConnectionInfo,
       dynamoStreamLambda
     ], webSocket);
   }
