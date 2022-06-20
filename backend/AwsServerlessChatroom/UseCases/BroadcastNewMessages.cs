@@ -28,7 +28,11 @@ public class BroadcastNewMessages
                 {
                     continue;
                 }
-                await _websocketPusher.PushData(subscription, msg);
+                await _websocketPusher.PushData(subscription, new
+                {
+                    Type = "newMessage",
+                    message = msg,
+                });
             }
         }
     }
