@@ -18,7 +18,10 @@
     <PackageReference Include="AWSSDK.ApiGatewayManagementApi" Version="3.7.0.168" />
     <PackageReference Include="AWSSDK.DynamoDBv2" Version="3.7.3.43" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
+    <PackageReference Include="NJsonSchema" Version="10.7.2" />
     <PackageReference Include="Polly" Version="7.2.3" />
+    <PackageReference Include="System.IO.FileSystem.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Extensions.DependencyInjection">
