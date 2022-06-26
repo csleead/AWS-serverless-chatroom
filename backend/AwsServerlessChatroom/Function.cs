@@ -118,41 +118,6 @@ public class Function
         return SuccessResponse;
     }
 
-    public async Task<APIGatewayProxyResponse> CreateChannel(APIGatewayProxyRequest request)
-    {
-        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
-        var message = JsonDocument.Parse(request.Body);
-        _ = message.RootElement.TryGetStringProperty("messageId", out var messageId);
-
-        if (!message.RootElement.TryGetProperty("channelName", out var channelName) || string.IsNullOrWhiteSpace(channelName.GetString()))
-        {
-            await pusher.PushData(request.GetConnectionId(), new
-            {
-                messageId,
-                Type = "createChannelResponse",
-                error = "The message doesn't contain a channelName"
-            });
-            return SuccessResponse;
-        }
-
-        using var scope = _serviceProvider.CreateScope();
-        var useCase = scope.ServiceProvider.GetRequiredService<CreateChannel>();
-        var id = await useCase.Execute(channelName.GetString()!);
-
-        await pusher.PushData(request.GetConnectionId(), new
-        {
-            messageId,
-            Type = "createChannelResponse",
-            message = "Channel created successfully",
-            result = new
-            {
-                channelId = id.ToString(),
-            },
-        });
-
-        return SuccessResponse;
-    }
-
     public async Task<APIGatewayProxyResponse> ListChannels(APIGatewayProxyRequest request)
     {
         var message = JsonDocument.Parse(request.Body);

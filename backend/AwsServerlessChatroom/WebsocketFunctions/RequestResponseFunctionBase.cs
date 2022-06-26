@@ -51,7 +51,7 @@ public abstract class RequestResponseFunctionBase<TRequest, TResponse>
         _ = serviceCollection.AddSingleton<ChannelSubscriptionsRepository>();
         _ = serviceCollection.AddSingleton<MessagesRepository>();
         _ = serviceCollection.AddSingleton<UseCases.JoinChannel>();
-        _ = serviceCollection.AddSingleton<CreateChannel>();
+        _ = serviceCollection.AddSingleton<UseCases.CreateChannel>();
         _ = serviceCollection.AddSingleton<SendMessage>();
         _ = serviceCollection.AddSingleton<BroadcastNewMessages>();
         _ = serviceCollection.AddSingleton<WebsocketPusher>();
