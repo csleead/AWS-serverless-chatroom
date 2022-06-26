@@ -118,64 +118,6 @@ public class Function
         return SuccessResponse;
     }
 
-    public async Task<APIGatewayProxyResponse> JoinChannel(APIGatewayProxyRequest request)
-    {
-        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
-        var message = JsonDocument.Parse(request.Body);
-
-        _ = message.RootElement.TryGetStringProperty("messageId", out var messageId);
-
-        if (!message.RootElement.TryGetProperty("channelId", out var channelId))
-        {
-            await pusher.PushData(request.GetConnectionId(), new
-            {
-                messageId,
-                Type = "joinChannelResponse",
-                error = "The message doesn't contain a channelId"
-            });
-            return SuccessResponse;
-        }
-
-        if (!channelId.TryGetGuid(out var channelGuid))
-        {
-            await pusher.PushData(request.GetConnectionId(), new
-            {
-                messageId,
-                Type = "joinChannelResponse",
-                error = "channelId must be a GUID"
-            });
-            return SuccessResponse;
-        }
-
-        using var scope = _serviceProvider.CreateScope();
-        var useCase = scope.ServiceProvider.GetRequiredService<JoinChannel>();
-        var result = await useCase.Execute(request.RequestContext.ConnectionId, channelGuid);
-
-        switch (result)
-        {
-            case JoinChannelResult.Success:
-                await pusher.PushData(request.GetConnectionId(), new
-                {
-                    messageId,
-                    Type = "joinChannelResponse",
-                    result = new { channelId }
-                });
-                break;
-            case JoinChannelResult.ChannelNotFound:
-                await pusher.PushData(request.GetConnectionId(), new
-                {
-                    messageId,
-                    Type = "joinChannelResponse",
-                    error = "Channel not found"
-                });
-                break;
-            default:
-                throw new Exception($"Unsupported JoinChannelResult: {result}");
-        }
-
-        return SuccessResponse;
-    }
-
     public async Task<APIGatewayProxyResponse> LeaveChannel(APIGatewayProxyRequest request)
     {
         var wsPusher = _serviceProvider.GetRequiredService<WebsocketPusher>();

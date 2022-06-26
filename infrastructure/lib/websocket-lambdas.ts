@@ -26,7 +26,7 @@ export function createWebsocketLambdas(scope: Construct, tables: DynamoTables): 
   const defaultFunc = createFunction(scope,'DefaultFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::Default', role);
   const getConnectionInfo = createFunction(scope,'GetConnectionInfoFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.WebsocketFunctions.GetConnectionInfo::HandleRequest', role);
   const createChannel = createFunction(scope,'CreateChannelFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::CreateChannel', role);
-  const joinChannel = createFunction(scope,'JoinChannelFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::JoinChannel', role);
+  const joinChannel =  createFunction(scope,'JoinChannelFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.WebsocketFunctions.JoinChannel::HandleRequest', role);
   const leaveChannel = createFunction(scope,'LeaveChannelFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::LeaveChannel', role);
   const listChannels = createFunction(scope,'ListChannelsFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::ListChannels', role);
   const sendMessage = createFunction(scope,'SendMessageFunction', 'AwsServerlessChatroom::AwsServerlessChatroom.Function::SendMessage', role);
