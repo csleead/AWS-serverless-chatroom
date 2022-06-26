@@ -1,0 +1,21 @@
+<h1 mat-dialog-title>Channels:</h1>
+<div mat-dialog-content>
+    <div *ngIf="channels$ | async as channels; else loading">
+        <mat-selection-list #channel [multiple]="false">
+            <mat-list-option *ngFor="let channel of channels$ | async" [value]="channel" >
+                <div>
+                    <span>
+                        {{channel.name}}
+                    </span>
+                    <span>
+                        <button mat-raised-button color="primary" (click)="joinChannel(channel)" class="join-btn">Join</button>
+                    </span>
+                </div>
+            </mat-list-option>
+        </mat-selection-list>
+    </div>
+    <ng-template #loading>
+        Loading
+    </ng-template>
+</div>
+

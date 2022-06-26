@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import {  CreateChannelResponseData, GetConnectionInfoResponseData, ListChannelsResponseData, FetchMessagesResponseData, JoinChannelResponseData, MessageDto } from './dto/channel';
+import {  CreateChannelResponseData, GetConnectionInfoResponseData, ListChannelsResponseData, FetchMessagesResponseData, JoinChannelResponseData, MessageDto, SendMessageResponseData } from './dto/channel';
 import { Observable, Subject, firstValueFrom, BehaviorSubject } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 
@@ -70,6 +70,14 @@ export class BackendCommunicationService {
     return this.makeRequest<void>({
       action: 'leaveChannel',
       channelId,
+    });
+  }
+
+  public sendMessage(channelId: string, content: string): Promise<SendMessageResponseData> {
+    return this.makeRequest<SendMessageResponseData>({
+      action: 'sendMessage',
+      channelId,
+      content,
     });
   }
 

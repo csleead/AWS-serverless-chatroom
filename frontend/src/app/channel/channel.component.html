@@ -1,0 +1,30 @@
+<div *ngIf="!initializing; else loading">
+  <div>
+    <h1>Messages:</h1>
+    <div class="messages-container">
+      <mat-card *ngFor="let m of messages" [ngClass]="{ 'my-message': m.isMyMessage, 'message-card': true }">
+        <mat-card-content>
+          <p>{{m.fromConnection}}</p>
+          <p>{{ m.content }}</p>
+          <p>{{ m.time | date:'medium' }}</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+  <div>
+    <mat-card class="send-message-card">
+      <textarea
+        class="send-message-textarea"
+        placeholder="Send a message"
+        [disabled]="sendingMessage"
+        [value]="textAreaMessage"
+        (change)="textAreaMessage = sendMessageTextarea.value"
+        #sendMessageTextarea
+        ></textarea>
+      <button mat-raised-button color="primary" (click)="sendMessage()" [disabled]="sendingMessage">Send</button>
+    </mat-card>
+  </div>
+</div>
+<ng-template #loading>
+  Loading ...
+</ng-template>
