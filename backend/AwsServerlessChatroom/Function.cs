@@ -118,61 +118,6 @@ public class Function
         return SuccessResponse;
     }
 
-    public async Task<APIGatewayProxyResponse> FetchMessages(APIGatewayProxyRequest request)
-    {
-        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
-
-        var body = JsonDocument.Parse(request.Body);
-        _ = body.RootElement.TryGetStringProperty("messageId", out var messageId);
-
-        if (!body.RootElement.TryGetProperty("channelId", out var channelIdELem) || !channelIdELem.TryGetGuid(out var channelId))
-        {
-            await pusher.PushData(request.GetConnectionId(), new
-            {
-                messageId,
-                Type = "fetchMessagesResponse",
-                error = "The message doesn't contain a channelId or channelId is not a valid GUID"
-            });
-            return SuccessResponse;
-        }
-
-        if (!body.RootElement.TryGetProperty("takeLast", out var takeLastELem) || !takeLastELem.TryGetInt32(out var takeLast) || takeLast < 0)
-        {
-            await pusher.PushData(request.GetConnectionId(), new
-            {
-                messageId,
-                Type = "fetchMessagesResponse",
-                error = "The message doesn't contain a takeLast property or takeLast is not a non-negative integer"
-            });
-            return SuccessResponse;
-        }
-
-        long maxSequence = -1;
-        if (body.RootElement.TryGetProperty("maxSequence", out var maxSequenceELem))
-        {
-            if (maxSequenceELem.TryGetInt64(out maxSequence) || maxSequence < 0)
-            {
-                await pusher.PushData(request.GetConnectionId(), new
-                {
-                    messageId,
-                    Type = "fetchMessagesResponse",
-                    error = "The message doesn't contain a maxSequence or maxSequence is not a non-negative integer"
-                });
-                return SuccessResponse;
-            }
-        }
-
-        var repo = _serviceProvider.GetRequiredService<MessagesRepository>();
-        var messages = await repo.FetchMessages(channelId, takeLast, maxSequence == -1 ? null : maxSequence);
-        await pusher.PushData(request.GetConnectionId(), new
-        {
-            messageId,
-            Type = "fetchMessagesResponse",
-            messages,
-        });
-        return SuccessResponse;
-    }
-
     public async Task<APIGatewayProxyResponse> SendMessage(APIGatewayProxyRequest request)
     {
         var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
