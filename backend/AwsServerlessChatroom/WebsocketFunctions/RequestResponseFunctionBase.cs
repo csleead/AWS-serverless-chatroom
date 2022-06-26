@@ -52,7 +52,7 @@ public abstract class RequestResponseFunctionBase<TRequest, TResponse>
         _ = serviceCollection.AddSingleton<MessagesRepository>();
         _ = serviceCollection.AddSingleton<UseCases.JoinChannel>();
         _ = serviceCollection.AddSingleton<UseCases.CreateChannel>();
-        _ = serviceCollection.AddSingleton<SendMessage>();
+        _ = serviceCollection.AddSingleton<UseCases.SendMessage>();
         _ = serviceCollection.AddSingleton<BroadcastNewMessages>();
         _ = serviceCollection.AddSingleton<WebsocketPusher>();
         _ = serviceCollection.AddSingleton<DisconnectionCleanup>();
