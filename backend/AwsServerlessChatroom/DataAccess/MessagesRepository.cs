@@ -57,12 +57,13 @@ public class MessagesRepository
         return messages;
     }
 
-    public async Task InsertMessage(string fromConnection, Guid channelId, string content)
+    public async Task<long> InsertMessage(string fromConnection, Guid channelId, string content)
     {
-        await RetryPolicy.ExecuteAsync(async () =>
+        return await RetryPolicy.ExecuteAsync(async () =>
         {
             var sequence = await NextMessageSequence(channelId);
             await PutMessage(fromConnection, channelId, content, sequence);
+            return sequence;
         });
     }
 

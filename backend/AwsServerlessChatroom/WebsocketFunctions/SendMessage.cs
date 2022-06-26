@@ -13,7 +13,7 @@ public class SendMessage : RequestResponseFunctionBase<SendMessageRequest, SendM
     protected override async Task<SendMessageResponse> HandleRequestCore(SendMessageRequest request, string connectionId, ILambdaContext lambdaContext)
     {
         var useCase = _serviceProvider.GetRequiredService<UseCases.SendMessage>();
-        var result = await useCase.Execute(
+        var (result, messageSequence) = await useCase.Execute(
             connectionId,
             request.ChannelId,
             request.Content
@@ -22,9 +22,9 @@ public class SendMessage : RequestResponseFunctionBase<SendMessageRequest, SendM
         switch (result)
         {
             case UseCases.SendMessageResult.Success:
-                return new SendMessageResponse("success");
+                return new SendMessageResponse("success", messageSequence);
             case UseCases.SendMessageResult.ChannelNotFound:
-                return new SendMessageResponse("channelNotFound");
+                return new SendMessageResponse("channelNotFound", null);
             default:
                 throw new Exception($"Unexpected SendMessageResult: ${result}");
         }
@@ -41,4 +41,4 @@ public class SendMessageRequest
     public string Content { get; set; } = default!;
 }
 
-public record SendMessageResponse(string Result);
+public record SendMessageResponse(string Result, long? MessageSequence);

@@ -40,10 +40,13 @@ public class MessagesRepositoryTest : IClassFixture<LocalDynamoDbFixture>, IAsyn
         var (conn3, content3) = (Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
         var (conn4, content4) = (Guid.NewGuid().ToString(), Guid.NewGuid().ToString());
 
-        await _respository.InsertMessage(conn1, channel1, content1);
-        await _respository.InsertMessage(conn2, channel1, content2);
-        await _respository.InsertMessage(conn3, channel2, content3);
-        await _respository.InsertMessage(conn4, channel2, content4);
+        var msg1Seq = await _respository.InsertMessage(conn1, channel1, content1);
+        var msg2Seq = await _respository.InsertMessage(conn2, channel1, content2);
+        var msg3Seq = await _respository.InsertMessage(conn3, channel2, content3);
+        var msg4Seq = await _respository.InsertMessage(conn4, channel2, content4);
+
+
+        _ = new[] { msg1Seq, msg2Seq, msg3Seq, msg4Seq }.Should().BeEquivalentTo(new[] { 0, 1, 0, 1 });
 
         var channel1Messages = await _respository.GetMessages(channel1);
         _ = channel1Messages.Should().HaveCount(2);
@@ -80,7 +83,7 @@ public class MessagesRepositoryTest : IClassFixture<LocalDynamoDbFixture>, IAsyn
         var channel = await _channelRespository.CreateChannel("CH1");
         for (var i = 0; i < 10; i++)
         {
-            await _respository.InsertMessage($"connection-{i}", channel, $"message-{i}");
+            _ = await _respository.InsertMessage($"connection-{i}", channel, $"message-{i}");
         }
 
         var messages = await _respository.FetchMessages(channel, 10, null);
