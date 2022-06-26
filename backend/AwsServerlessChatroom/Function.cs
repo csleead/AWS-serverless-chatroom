@@ -118,22 +118,6 @@ public class Function
         return SuccessResponse;
     }
 
-    public async Task<APIGatewayProxyResponse> GetConnectionInfo(APIGatewayProxyRequest request)
-    {
-        var message = JsonDocument.Parse(request.Body);
-        _ = message.RootElement.TryGetStringProperty("messageId", out var messageId);
-
-        var wsPusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
-        await wsPusher.PushData(request.GetConnectionId(), new
-        {
-            messageId,
-            Type = "connectionInfoResponse",
-            ConnectionId = request.GetConnectionId(),
-        });
-
-        return SuccessResponse;
-    }
-
     public async Task<APIGatewayProxyResponse> JoinChannel(APIGatewayProxyRequest request)
     {
         var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
