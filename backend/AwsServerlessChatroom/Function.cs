@@ -118,23 +118,6 @@ public class Function
         return SuccessResponse;
     }
 
-    public async Task<APIGatewayProxyResponse> ListChannels(APIGatewayProxyRequest request)
-    {
-        var message = JsonDocument.Parse(request.Body);
-        _ = message.RootElement.TryGetStringProperty("messageId", out var messageId);
-
-        var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
-        var repo = _serviceProvider.GetRequiredService<ChannelRepository>();
-        var channels = await repo.ListChannels();
-        await pusher.PushData(request.GetConnectionId(), new
-        {
-            messageId,
-            Type = "listChannelsResponse",
-            channels,
-        });
-        return SuccessResponse;
-    }
-
     public async Task<APIGatewayProxyResponse> FetchMessages(APIGatewayProxyRequest request)
     {
         var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
