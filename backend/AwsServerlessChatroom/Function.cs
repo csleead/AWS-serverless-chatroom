@@ -118,31 +118,6 @@ public class Function
         return SuccessResponse;
     }
 
-    public async Task<APIGatewayProxyResponse> LeaveChannel(APIGatewayProxyRequest request)
-    {
-        var wsPusher = _serviceProvider.GetRequiredService<WebsocketPusher>();
-        var body = JsonDocument.Parse(request.Body);
-
-        _ = body.RootElement.TryGetStringProperty("messageId", out var messageId);
-
-        if (!body.RootElement.TryGetProperty("channelId", out var channelIdELem) || !channelIdELem.TryGetGuid(out var channelId))
-        {
-            await wsPusher.PushData(request.GetConnectionId(), new
-            {
-                messageId,
-                Type = "leaveChannelResponse",
-                error = "The message doesn't contain a channelId or channelId is not a valid GUID"
-            });
-            return SuccessResponse;
-        }
-
-        var leaveChannel = _serviceProvider.GetRequiredService<LeaveChannel>();
-        await leaveChannel.Execute(request.GetConnectionId(), channelId);
-        await wsPusher.PushData(request.GetConnectionId(), new { messageId, Type = "leaveChannelResponse", message = "Leave channel successfully" });
-
-        return SuccessResponse;
-    }
-
     public async Task<APIGatewayProxyResponse> CreateChannel(APIGatewayProxyRequest request)
     {
         var pusher = _serviceProvider.GetRequiredService<WebsocketPusher>();

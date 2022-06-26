@@ -56,7 +56,7 @@ public abstract class RequestResponseFunctionBase<TRequest, TResponse>
         _ = serviceCollection.AddSingleton<BroadcastNewMessages>();
         _ = serviceCollection.AddSingleton<WebsocketPusher>();
         _ = serviceCollection.AddSingleton<DisconnectionCleanup>();
-        _ = serviceCollection.AddSingleton<LeaveChannel>();
+        _ = serviceCollection.AddSingleton<UseCases.LeaveChannel>();
 
         _serviceProvider = serviceCollection.BuildServiceProvider(validateScopes: true);
     }
