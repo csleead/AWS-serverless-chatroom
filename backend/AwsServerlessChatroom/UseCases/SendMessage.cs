@@ -12,14 +12,14 @@ public class SendMessage
         _messagesRepository = messagesRepository;
     }
 
-    public async Task<(SendMessageResult, long sequence)> Execute(string fromConnection, Guid channel, string message)
+    public async Task<(SendMessageResult, Message? message)> Execute(string fromConnection, Guid channel, string content)
     {
         if (!await _channelRepository.ExistsChannel(channel))
         {
-            return (SendMessageResult.ChannelNotFound, -1);
+            return (SendMessageResult.ChannelNotFound, null);
         }
 
-        var messageSeq = await _messagesRepository.InsertMessage(fromConnection, channel, message);
-        return (SendMessageResult.Success, messageSeq);
+        var message = await _messagesRepository.InsertMessage(fromConnection, channel, content);
+        return (SendMessageResult.Success, message);
     }
 }

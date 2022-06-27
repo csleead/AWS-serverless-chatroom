@@ -28,12 +28,21 @@ public class BroadcastNewMessages
                 {
                     continue;
                 }
-                await _websocketPusher.PushData(subscription, new
-                {
-                    Type = "newMessage",
-                    message = msg,
-                });
+                await _websocketPusher.PushData(subscription, new NewMessageDto(MessageDto.FromMessage(msg)));
             }
+        }
+    }
+
+    private record NewMessageDto(MessageDto Data)
+    {
+        public string Type { get; } = "newMessage";
+    }
+
+    private record MessageDto(Guid ChannelId, long Sequence, string Content, string FromConnection, DateTimeOffset Time)
+    {
+        public static MessageDto FromMessage(Message message)
+        {
+            return new MessageDto(message.ChannelId, message.Sequence, message.Content, message.FromConnection, message.Time);
         }
     }
 }

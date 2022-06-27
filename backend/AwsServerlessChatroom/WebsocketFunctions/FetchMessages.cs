@@ -10,7 +10,7 @@ public class FetchMessages : RequestResponseFunctionBase<FetchMessagesRequest, F
     {
         var repo = _serviceProvider.GetRequiredService<MessagesRepository>();
         var messages = await repo.FetchMessages(request.ChannelId, request.TakeLast, request.MaxSequence);
-        return new FetchMessagesResponse(messages.Select(m => new MessageDto(m.Sequence, m.Content, m.FromConnection)).ToList());
+        return new FetchMessagesResponse(messages.Select(m => new MessageDto(m.ChannelId, m.Sequence, m.Content, m.FromConnection, m.Time)).ToList());
     }
 }
 
@@ -29,4 +29,3 @@ public class FetchMessagesRequest
 
 public record FetchMessagesResponse(List<MessageDto> Messages);
 
-public record MessageDto(long Sequence, string Content, string FromConnection);

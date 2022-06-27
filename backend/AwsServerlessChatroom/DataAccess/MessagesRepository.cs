@@ -57,13 +57,12 @@ public class MessagesRepository
         return messages;
     }
 
-    public async Task<long> InsertMessage(string fromConnection, Guid channelId, string content)
+    public async Task<Message> InsertMessage(string fromConnection, Guid channelId, string content)
     {
         return await RetryPolicy.ExecuteAsync(async () =>
         {
             var sequence = await NextMessageSequence(channelId);
-            await PutMessage(fromConnection, channelId, content, sequence);
-            return sequence;
+            return await PutMessage(fromConnection, channelId, content, sequence);
         });
     }
 
@@ -85,8 +84,9 @@ public class MessagesRepository
         return long.Parse(response.Items.Single()["MsgSeq"].N) + 1;
     }
 
-    private async Task PutMessage(string fromConnection, Guid channelId, string content, long sequence)
+    private async Task<Message> PutMessage(string fromConnection, Guid channelId, string content, long sequence)
     {
+        var now = DateTimeOffset.UtcNow;
         var tran = new TransactWriteItemsRequest();
         tran.TransactItems.Add(new TransactWriteItem
         {
@@ -97,7 +97,7 @@ public class MessagesRepository
                 {
                     { "ChannelId", new AttributeValue(channelId.ToString()) },
                     { "MsgSeq", new AttributeValue { N = $"{sequence}" } },
-                    { "Timestamp", new AttributeValue { N = $"{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}" } },
+                    { "Timestamp", new AttributeValue { N = $"{now.ToUnixTimeMilliseconds()}" } },
                     { "FromConnection", new AttributeValue(fromConnection) },
                     { "Content", new AttributeValue(content) },
                 }
@@ -127,6 +127,8 @@ public class MessagesRepository
         var response = await _dbClient.TransactWriteItemsAsync(tran);
 
         AwsServiceException.ThrowIfFailed(response);
+
+        return new Message(channelId, sequence, content, fromConnection, now);
     }
 
     public async Task<IReadOnlyList<Message>> GetMessages(Guid channelId)

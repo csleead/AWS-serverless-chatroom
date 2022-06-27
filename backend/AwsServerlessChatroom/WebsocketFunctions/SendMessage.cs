@@ -1,4 +1,5 @@
 ﻿using Amazon.Lambda.Core;
+using AwsServerlessChatroom.DataAccess;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,7 @@ public class SendMessage : RequestResponseFunctionBase<SendMessageRequest, SendM
     protected override async Task<SendMessageResponse> HandleRequestCore(SendMessageRequest request, string connectionId, ILambdaContext lambdaContext)
     {
         var useCase = _serviceProvider.GetRequiredService<UseCases.SendMessage>();
-        var (result, messageSequence) = await useCase.Execute(
+        var (result, message) = await useCase.Execute(
             connectionId,
             request.ChannelId,
             request.Content
@@ -22,7 +23,7 @@ public class SendMessage : RequestResponseFunctionBase<SendMessageRequest, SendM
         switch (result)
         {
             case UseCases.SendMessageResult.Success:
-                return new SendMessageResponse("success", messageSequence);
+                return new SendMessageResponse("success", MessageDto.FromMessage(message!));
             case UseCases.SendMessageResult.ChannelNotFound:
                 return new SendMessageResponse("channelNotFound", null);
             default:
@@ -41,4 +42,4 @@ public class SendMessageRequest
     public string Content { get; set; } = default!;
 }
 
-public record SendMessageResponse(string Result, long? MessageSequence);
+public record SendMessageResponse(string Result, MessageDto Message);
