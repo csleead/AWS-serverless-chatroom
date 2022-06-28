@@ -56,7 +56,8 @@ export class AppComponent implements OnInit {
 
   async leaveChannelButtonClicked(c: Channel) {
     if(confirm(`You want to leave channel ${c.name}?`)){
-      await this.backendService.leaveChannel(c.id);
+      // we don't really need to await it. leaveChannel call is not that important
+      this.backendService.leaveChannel(c.id);
       const index = this.joinedChannels.indexOf(c);
       this.joinedChannels.splice(index, 1);
     }
