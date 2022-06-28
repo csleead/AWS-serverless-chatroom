@@ -1,0 +1,25 @@
+@use '@angular/material' as mat
+
+.messages-container
+    margin: 10px
+    max-height: 60vh
+    overflow-y: scroll
+
+.message-card
+    @include mat.elevation(8)
+    margin-top: 10px
+    margin-bottom: 10px
+    margin-left: 10px
+    margin-right: 60vw
+
+.message-card.my-message
+    background-color: #bfe1a1
+    margin-left: 60vw
+    margin-right: 10px
+
+.send-message-card
+    background-color: lightgrey
+    margin: 10px
+
+.send-message-textarea
+    width: 100%
