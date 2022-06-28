@@ -65,15 +65,21 @@ export class ChannelComponent implements OnInit, OnDestroy {
 
   async onNewMessage(msgDto: MessageDto) {
     const msg = mapMessageFromDto(msgDto, this.connectionId);
+    if(this.messages.length === 0) {
+      this.messages.push(msg);
+      return;
+    }
 
-    if(this.messages.length > 0) {
-      const currentLatestSequence = this.messages[this.messages.length - 1].sequence;
+    const currentLatestSequence = this.messages[this.messages.length - 1].sequence;
+    if(msgDto.sequence <= currentLatestSequence) {
+      // we already have that message, simply discard it.
+      return;
+    }
 
-      if(currentLatestSequence + 1 !== msg.sequence) {
-        // There is a "gap" in messages, fill it
-        const { messages } = await this.backendService.fetchMessages(this.channel.id, msg.sequence - currentLatestSequence - 1, msg.sequence - 1);
-        this.messages = [...this.messages, ...messages.map(m => mapMessageFromDto(m, this.connectionId))];
-      }
+    if(currentLatestSequence + 1 !== msg.sequence) {
+      // There is a "gap" in messages, fill it
+      const { messages } = await this.backendService.fetchMessages(this.channel.id, msg.sequence - currentLatestSequence - 1, msg.sequence - 1);
+      this.messages = [...this.messages, ...messages.map(m => mapMessageFromDto(m, this.connectionId))];
     }
 
     this.messages.push(msg);
