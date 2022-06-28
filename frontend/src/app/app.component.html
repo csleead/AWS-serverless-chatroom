@@ -1,7 +1,11 @@
 <div *ngIf="initialized; else loading">
     <button mat-raised-button color="primary" (click)="openSelectChannelDialog()" id="join-channel-button">Join a channel</button>
     <mat-tab-group [selectedIndex]="selected">
-        <mat-tab *ngFor="let c of joinedChannels" [label]="c.name">
+        <mat-tab *ngFor="let c of joinedChannels">
+            <ng-template mat-tab-label>
+                <span>{{ c.name }}</span>
+                <mat-icon (click)="leaveChannelButtonClicked(c)">close</mat-icon>
+            </ng-template>
             <app-channel [channel]="c" [connectionId]="connectionId" ></app-channel>
         </mat-tab>
     </mat-tab-group>

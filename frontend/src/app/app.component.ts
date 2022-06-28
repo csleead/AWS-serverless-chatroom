@@ -40,6 +40,14 @@ export class AppComponent implements OnInit {
     });
   }
 
+  async leaveChannelButtonClicked(c: Channel) {
+    if(confirm(`You want to leave channel ${c.name}?`)){
+      await this.backendService.leaveChannel(c.id);
+      const index = this.joinedChannels.indexOf(c);
+      this.joinedChannels.splice(index, 1);
+    }
+  }
+
   increment() {
     this.selected++;
   }

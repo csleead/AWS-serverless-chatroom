@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon';
 import { SelectChannelDialogComponent } from './select-channel-dialog/select-channel-dialog.component';
 import { ChannelComponent } from './channel/channel.component';
 
@@ -28,6 +29,7 @@ import { ChannelComponent } from './channel/channel.component';
     MatListModule,
     MatCardModule,
     MatInputModule,
+    MatIconModule,
   ],
   providers: [],
   bootstrap: [AppComponent],
