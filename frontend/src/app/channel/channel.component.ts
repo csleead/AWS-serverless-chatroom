@@ -54,7 +54,7 @@ export class ChannelComponent implements OnInit, OnDestroy {
     this.sendingMessage = true;
     const response = await this.backendService.sendMessage(this.channel.id, this.textAreaMessage);
     if(response.result === 'success') {
-      this.onNewMessage(response.message);
+      await this.onNewMessage(response.message);
     } else {
       alert('Message sending failed');
     }
@@ -63,15 +63,29 @@ export class ChannelComponent implements OnInit, OnDestroy {
     this.textAreaMessage = '';
   }
 
-  onNewMessage(msgDto: MessageDto) {
-    const msg: ChannelMessage = {
-      fromConnection: msgDto.fromConnection,
-      sequence: msgDto.sequence,
-      content: msgDto.content,
-      isMyMessage: msgDto.fromConnection === this.connectionId,
-      time: new Date(msgDto.time),
-    };
+  async onNewMessage(msgDto: MessageDto) {
+    const msg = mapMessageFromDto(msgDto, this.connectionId);
+
+    if(this.messages.length > 0) {
+      const currentLatestSequence = this.messages[this.messages.length - 1].sequence;
+
+      if(currentLatestSequence + 1 !== msg.sequence) {
+        // There is a "gap" in messages, fill it
+        const { messages } = await this.backendService.fetchMessages(this.channel.id, msg.sequence - currentLatestSequence - 1, msg.sequence - 1);
+        this.messages = [...this.messages, ...messages.map(m => mapMessageFromDto(m, this.connectionId))];
+      }
+    }
 
     this.messages.push(msg);
   }
+}
+
+function mapMessageFromDto(msgDto: MessageDto, myConnectionId: string): ChannelMessage {
+  return {
+    fromConnection: msgDto.fromConnection,
+    sequence: msgDto.sequence,
+    content: msgDto.content,
+    isMyMessage: msgDto.fromConnection === myConnectionId,
+    time: new Date(msgDto.time),
+  };
 }
