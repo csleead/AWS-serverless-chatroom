@@ -1,4 +1,5 @@
 <div *ngIf="initialized; else loading">
+    <button mat-raised-button color="primary" (click)="openCreateChannelDialog()" id="create-channel-button">Create a channel</button>
     <button mat-raised-button color="primary" (click)="openSelectChannelDialog()" id="join-channel-button">Join a channel</button>
     <mat-tab-group [selectedIndex]="selected">
         <mat-tab *ngFor="let c of joinedChannels">

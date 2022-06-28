@@ -1,3 +1,4 @@
+import { CreateChannelDialogComponent } from './create-channel-dialog/create-channel-dialog.component';
 import { Channel } from './dto/channel';
 import { BackendCommunicationService } from './backend-communication.service';
 import { SelectChannelDialogComponent } from './select-channel-dialog/select-channel-dialog.component';
@@ -30,6 +31,19 @@ export class AppComponent implements OnInit {
   openSelectChannelDialog() {
     const dialogRef = this.dialog.open(SelectChannelDialogComponent, {
       width: '500px',
+    });
+
+    dialogRef.afterClosed().subscribe((channel: Channel | undefined) => {
+      if(channel) {
+        this.joinedChannels.push(channel);
+        this.selected = this.joinedChannels.length - 1;
+      }
+    });
+  }
+
+  openCreateChannelDialog() {
+    const dialogRef = this.dialog.open(CreateChannelDialogComponent, {
+      width: '250px',
     });
 
     dialogRef.afterClosed().subscribe((channel: Channel | undefined) => {

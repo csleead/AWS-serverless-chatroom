@@ -11,14 +11,17 @@ import { MatListModule } from '@angular/material/list';
 import { MatCardModule } from '@angular/material/card';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SelectChannelDialogComponent } from './select-channel-dialog/select-channel-dialog.component';
 import { ChannelComponent } from './channel/channel.component';
+import { CreateChannelDialogComponent } from './create-channel-dialog/create-channel-dialog.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     SelectChannelDialogComponent,
     ChannelComponent,
+    CreateChannelDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -30,6 +33,7 @@ import { ChannelComponent } from './channel/channel.component';
     MatCardModule,
     MatInputModule,
     MatIconModule,
+    MatProgressSpinnerModule,
   ],
   providers: [],
   bootstrap: [AppComponent],

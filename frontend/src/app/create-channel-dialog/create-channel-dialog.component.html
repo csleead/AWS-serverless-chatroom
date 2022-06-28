@@ -1,0 +1,13 @@
+<h1>Create channel</h1>
+<div *ngIf="!loading; else spinner">
+  <mat-form-field appearance="fill">
+    <mat-label>Channel name</mat-label>
+    <input matInput [value]="channelName" (change)="channelName = channelNameInput.value" #channelNameInput />
+  </mat-form-field>
+  <br>
+  <button mat-raised-button color="primary" (click)="create()">Create</button>
+  <button mat-raised-button (click)="cancel()">Cancel</button>
+</div>
+<ng-template #spinner>
+  <mat-spinner></mat-spinner>
+</ng-template>
