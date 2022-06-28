@@ -61,12 +61,4 @@ export class AppComponent implements OnInit {
       this.joinedChannels.splice(index, 1);
     }
   }
-
-  increment() {
-    this.selected++;
-  }
-
-  decrement() {
-    this.selected--;
-  }
 }
